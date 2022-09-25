@@ -8,7 +8,7 @@ import (
 )
 
 type Document struct {
-	ID        uuid.UUID `json:"id" gorm:"type:uuid;primary_key;"`
+	ID        uuid.UUID `json:"id" gorm:"type:char(36);primary_key;"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
