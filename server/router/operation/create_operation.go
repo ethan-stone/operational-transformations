@@ -21,8 +21,18 @@ func Create(c *fiber.Ctx) error {
 		})
 	}
 
+	documentId, documentIdErr := uuid.Parse(body.DocumentID)
+
+	if documentIdErr != nil {
+		log.Error().Msg(documentIdErr.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid Document ID format",
+		})
+	}
+
 	operation := new(db.Operation)
-	operation.DocumentID = uuid.MustParse(body.DocumentID)
+	operation.DocumentID = documentId
+	operation.IsProcessed = false
 	result := db.DB.Create(&operation)
 
 	if result.Error != nil {
