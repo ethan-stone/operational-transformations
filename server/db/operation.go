@@ -9,7 +9,7 @@ import (
 
 type Operation struct {
 	ID         uuid.UUID `json:"id" gorm:"type:char(36);primary_key"`
-	DocumentID uuid.UUID `json:"document_id" gorm:"type:charg(36);primary_key"`
+	DocumentID uuid.UUID `json:"document_id" gorm:"type:char(36);primary_key"`
 	CreatedAt  time.Time `json:"created_at"`
 }
 
