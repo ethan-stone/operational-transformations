@@ -8,6 +8,8 @@ import (
 
 func Create(c *fiber.Ctx) error {
 	document := new(db.Document)
+	document.Content = ""
+
 	result := db.DB.Create(&document)
 
 	if result.Error != nil {

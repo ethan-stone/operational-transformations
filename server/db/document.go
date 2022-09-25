@@ -9,6 +9,7 @@ import (
 
 type Document struct {
 	ID        uuid.UUID `json:"id" gorm:"type:char(36);primary_key"`
+	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
