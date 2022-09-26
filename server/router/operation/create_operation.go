@@ -1,10 +1,16 @@
 package operation
 
 import (
-	"github.com/ethan-stone/optra/server/db"
+	"context"
+	"encoding/json"
+	"time"
+
+	"github.com/ethan-stone/optra/server/kafka/messages"
+	"github.com/ethan-stone/optra/server/kafka/writer"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"github.com/segmentio/kafka-go"
 )
 
 type CreateOperationInput struct {
@@ -30,20 +36,27 @@ func Create(c *fiber.Ctx) error {
 		})
 	}
 
-	operation := new(db.Operation)
-	operation.DocumentID = documentId
-	operation.IsProcessed = false
-	result := db.DB.Create(&operation)
+	msgJSON := messages.NewOperationCreatedMsg(messages.OperationCreatedMsgData{
+		ID:          uuid.New(),
+		DocumentID:  documentId,
+		IsProcessed: false,
+		CreatedAt:   time.Now(),
+	})
 
-	if result.Error != nil {
-		log.Error().Msg(result.Error.Error())
+	msg, msgMarshalErr := json.Marshal(msgJSON)
+
+	if msgMarshalErr != nil {
+		log.Error().Msg(msgMarshalErr.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Internal Server Error",
 		})
 	}
 
-	log.Info().Msgf("Operation With ID: %v created", operation.ID)
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"data": operation,
+	writer.Writer.WriteMessages(context.Background(), kafka.Message{
+		Key:   []byte(documentId.String()),
+		Value: msg,
 	})
+
+	log.Info().Msgf("OperationCreatedMsg sent with ID: %v created", msgJSON.ID)
+	return c.SendStatus(fiber.StatusNoContent)
 }

@@ -1,12 +1,18 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+
 	"github.com/ethan-stone/optra/server/db"
+	"github.com/ethan-stone/optra/server/kafka/reader"
+	"github.com/ethan-stone/optra/server/kafka/writer"
 	"github.com/ethan-stone/optra/server/middleware/logger"
 	"github.com/ethan-stone/optra/server/router/document"
 	"github.com/ethan-stone/optra/server/router/operation"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/rs/zerolog/log"
 )
 
 func ping(c *fiber.Ctx) error {
@@ -17,6 +23,8 @@ func ping(c *fiber.Ctx) error {
 
 func main() {
 	db.Connect()
+	writer.Connect()
+	reader.Connect()
 
 	app := fiber.New()
 
@@ -31,6 +39,17 @@ func main() {
 
 	app.Post("/documents", document.Create)
 	app.Post("/operations", operation.Create)
+
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, os.Interrupt)
+
+	go func() {
+		<-signalChannel
+		log.Info().Msg("Server shutting down...")
+		reader.Reader.Close()
+		app.Shutdown()
+		log.Info().Msg("Server shutdown.")
+	}()
 
 	app.Listen(":8080")
 }
