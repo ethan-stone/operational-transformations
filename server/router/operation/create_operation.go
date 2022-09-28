@@ -52,10 +52,12 @@ func Create(c *fiber.Ctx) error {
 		})
 	}
 
+	log.Debug().Msg("before send")
 	writer.Writer.WriteMessages(context.Background(), kafka.Message{
 		Key:   []byte(documentId.String()),
 		Value: msg,
 	})
+	log.Debug().Msg("before after")
 
 	log.Info().Msgf("OperationCreatedMsg sent with ID: %v created", msgJSON.ID)
 	return c.SendStatus(fiber.StatusNoContent)

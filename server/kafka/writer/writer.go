@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
@@ -25,8 +26,9 @@ func Connect() {
 	}
 
 	Writer = kafka.NewWriter(kafka.WriterConfig{
-		Brokers: strings.Split(os.Getenv("BROKER_LIST"), ","),
-		Topic:   "operations",
-		Dialer:  dialer,
+		Brokers:      strings.Split(os.Getenv("BROKER_LIST"), ","),
+		Topic:        "operations",
+		Dialer:       dialer,
+		BatchTimeout: 100 * time.Millisecond,
 	})
 }

@@ -1,10 +1,14 @@
 package reader
 
 import (
+	"context"
 	"crypto/tls"
+	"encoding/json"
 	"os"
 	"strings"
 
+	"github.com/ethan-stone/optra/server/db"
+	"github.com/ethan-stone/optra/server/kafka/messages"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/sasl/scram"
@@ -30,25 +34,25 @@ func Connect() {
 		Dialer:  dialer,
 	})
 
-	// for {
-	// 	m, err := Reader.ReadMessage(context.Background())
-	// 	if err != nil {
-	// 		log.Error().Msg(err.Error())
-	// 		break
-	// 	}
-	// 	msg := new(messages.OperationCreatedMsg)
-	// 	unmarshalErr := json.Unmarshal(m.Value, &msg)
+	for {
+		m, err := Reader.ReadMessage(context.Background())
+		if err != nil {
+			log.Error().Msg(err.Error())
+			break
+		}
+		msg := new(messages.OperationCreatedMsg)
+		unmarshalErr := json.Unmarshal(m.Value, &msg)
 
-	// 	if unmarshalErr != nil {
-	// 		log.Error().Msg(err.Error())
-	// 		break
-	// 	}
+		if unmarshalErr != nil {
+			log.Error().Msg(err.Error())
+			break
+		}
 
-	// 	db.DB.Create(&db.Operation{
-	// 		ID:          msg.Data.ID,
-	// 		DocumentID:  msg.Data.DocumentID,
-	// 		IsProcessed: msg.Data.IsProcessed,
-	// 		CreatedAt:   msg.Data.CreatedAt,
-	// 	})
-	// }
+		db.DB.Create(&db.Operation{
+			ID:          msg.Data.ID,
+			DocumentID:  msg.Data.DocumentID,
+			IsProcessed: msg.Data.IsProcessed,
+			CreatedAt:   msg.Data.CreatedAt,
+		})
+	}
 }

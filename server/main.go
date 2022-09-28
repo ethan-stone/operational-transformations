@@ -24,7 +24,7 @@ func ping(c *fiber.Ctx) error {
 func main() {
 	db.Connect()
 	writer.Connect()
-	reader.Connect()
+	go reader.Connect()
 
 	app := fiber.New()
 
