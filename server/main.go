@@ -24,7 +24,7 @@ func ping(c *fiber.Ctx) error {
 func main() {
 	db.Connect()
 	writer.Connect()
-	go reader.Connect()
+	go reader.Connect() // run the consumer asynchronously
 
 	app := fiber.New()
 

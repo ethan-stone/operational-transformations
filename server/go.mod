@@ -6,6 +6,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.37.1
 	github.com/google/uuid v1.3.0
 	github.com/rs/zerolog v1.28.0
+	github.com/segmentio/kafka-go v0.4.35
 	gorm.io/driver/mysql v1.3.6
 	gorm.io/gorm v1.23.8
 )
@@ -19,7 +20,6 @@ require (
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
-	github.com/segmentio/kafka-go v0.4.35 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.40.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect

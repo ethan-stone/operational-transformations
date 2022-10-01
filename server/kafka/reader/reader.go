@@ -48,11 +48,14 @@ func Connect() {
 			break
 		}
 
+		// record the operation
 		db.DB.Create(&db.Operation{
 			ID:          msg.Data.ID,
 			DocumentID:  msg.Data.DocumentID,
 			IsProcessed: msg.Data.IsProcessed,
 			CreatedAt:   msg.Data.CreatedAt,
 		})
+
+		// modify the document
 	}
 }
