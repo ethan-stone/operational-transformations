@@ -14,7 +14,11 @@ import (
 )
 
 type CreateOperationInput struct {
-	DocumentID string `json:"document_id" binding:"required"`
+	DocumentID    string  `json:"document_id" binding:"required"`
+	Action        string  `json:"action" binding:"required"`
+	StartPosition int32   `json:"start_position" binding:"required"`
+	EndPosition   *int32  `json:"end_position,omitempty"`
+	Text          *string `json:"text,omitempty"`
 }
 
 func Create(c *fiber.Ctx) error {
@@ -36,12 +40,40 @@ func Create(c *fiber.Ctx) error {
 		})
 	}
 
-	msgJSON := messages.NewOperationCreatedMsg(messages.OperationCreatedMsgData{
-		ID:          uuid.New(),
-		DocumentID:  documentId,
-		IsProcessed: false,
-		CreatedAt:   time.Now(),
-	})
+	if body.Action == "INSERT" && body.Text == nil {
+		log.Error().Msgf("INSERT operation missing text, BadRequest")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "INSERT operation is missing text",
+		})
+	}
+
+	if body.Action == "DELETE" && body.EndPosition == nil {
+		log.Error().Msgf("DELETE operation missing end position, BadRequest")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "DELETE operation is missing end position",
+		})
+	}
+
+	operationCreatedMsgData := messages.OperationCreatedMsgData{
+		ID:            uuid.New(),
+		DocumentID:    documentId,
+		IsProcessed:   false,
+		Action:        body.Action,
+		StartPosition: body.StartPosition,
+		CreatedAt:     time.Now(),
+	}
+
+	if body.Action == "DELETE" {
+		operationCreatedMsgData.EndPosition = *body.EndPosition
+		operationCreatedMsgData.Text = ""
+	}
+
+	if body.Action == "INSERT" {
+		operationCreatedMsgData.EndPosition = body.StartPosition
+		operationCreatedMsgData.Text = *body.Text
+	}
+
+	msgJSON := messages.NewOperationCreatedMsg(operationCreatedMsgData)
 
 	msg, msgMarshalErr := json.Marshal(msgJSON)
 
@@ -52,13 +84,12 @@ func Create(c *fiber.Ctx) error {
 		})
 	}
 
-	log.Debug().Msg("before send")
 	writer.Writer.WriteMessages(context.Background(), kafka.Message{
 		Key:   []byte(documentId.String()),
 		Value: msg,
 	})
-	log.Debug().Msg("before after")
 
 	log.Info().Msgf("OperationCreatedMsg sent with ID: %v created", msgJSON.ID)
+
 	return c.SendStatus(fiber.StatusNoContent)
 }

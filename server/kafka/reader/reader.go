@@ -29,9 +29,11 @@ func Connect() {
 	}
 
 	Reader = kafka.NewReader(kafka.ReaderConfig{
-		Brokers: strings.Split(os.Getenv("BROKER_LIST"), ","),
-		Topic:   "operations",
-		Dialer:  dialer,
+		Brokers:     strings.Split(os.Getenv("BROKER_LIST"), ","),
+		Topic:       "operations",
+		GroupID:     "consumer:operations.created",
+		Dialer:      dialer,
+		StartOffset: kafka.LastOffset,
 	})
 
 	for {
@@ -40,6 +42,9 @@ func Connect() {
 			log.Error().Msg(err.Error())
 			break
 		}
+
+		log.Info().Msgf("Messaged received: %v", m)
+
 		msg := new(messages.OperationCreatedMsg)
 		unmarshalErr := json.Unmarshal(m.Value, &msg)
 
@@ -48,13 +53,21 @@ func Connect() {
 			break
 		}
 
+		log.Info().Msgf("Message parsed: %v", msg)
+
 		// record the operation
 		db.DB.Create(&db.Operation{
-			ID:          msg.Data.ID,
-			DocumentID:  msg.Data.DocumentID,
-			IsProcessed: msg.Data.IsProcessed,
-			CreatedAt:   msg.Data.CreatedAt,
+			ID:            msg.Data.ID,
+			DocumentID:    msg.Data.DocumentID,
+			IsProcessed:   msg.Data.IsProcessed,
+			Action:        msg.Data.Action,
+			StartPosition: msg.Data.StartPosition,
+			EndPosition:   msg.Data.EndPosition,
+			Text:          msg.Data.Text,
+			CreatedAt:     msg.Data.CreatedAt,
 		})
+
+		log.Info().Msgf("Operation record with ID: %v", msg.Data.ID)
 
 		// modify the document
 	}
