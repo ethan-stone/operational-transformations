@@ -69,6 +69,11 @@ func Connect() {
 
 		log.Info().Msgf("Operation record with ID: %v", msg.Data.ID)
 
-		// modify the document
+		// get the document
+		document := db.Document{}
+		db.DB.First(&document, msg.Data.DocumentID)
+
+		// TODO: modify the document
+
 	}
 }
